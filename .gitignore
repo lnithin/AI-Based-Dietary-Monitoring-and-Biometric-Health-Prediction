@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+.venv/
+
+# ML / TensorFlow
+*.h5
+*.pb
+*.onnx
+*.tflite
+
+# MongoDB
+.mongo/
+data/
+*.wt
+WiredTiger*
+journal/
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
