@@ -1,0 +1,9 @@
+{
+  "name": "nlp-service",
+  "version": "1.0.0",
+  "description": "NLP Service for ingredient extraction from meal descriptions",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py"
+  }
+}

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Test - CV Explainability & Glucose Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #4338ca; }
+        h2 { color: #6366f1; margin-top: 0; }
+        button {
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover { background: #7c3aed; }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9fafb;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success { border-left: 4px solid #10b981; }
+        .error { border-left: 4px solid #ef4444; }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 150px;
+        }
+        label {
+            display: inline-block;
+            width: 180px;
+            font-weight: 600;
+        }
+        .form-row {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 System Testing Dashboard</h1>
+    <p><strong>Date:</strong> December 24, 2025 | <strong>Purpose:</strong> Verify explainability & medical prediction</p>
+
+    <!-- Test 1: CV Service Health -->
+    <div class="test-section">
+        <h2>1️⃣ CV Service Health Check</h2>
+        <button onclick="testCVHealth()">Test CV Service (Port 5002)</button>
+        <div id="cv-result" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 2: LSTM Service Health -->
+    <div class="test-section">
+        <h2>2️⃣ LSTM Service Health Check</h2>
+        <button onclick="testLSTMHealth()">Test LSTM Service (Port 5001)</button>
+        <div id="lstm-result" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 3: Glucose Prediction with Medical Validation -->
+    <div class="test-section">
+        <h2>3️⃣ Medical Glucose Prediction Test</h2>
+        <p><strong>Scenario:</strong> High-carb meal with moderate activity</p>
+        
+        <div class="form-row">
+            <label>Carbohydrates (g):</label>
+            <input type="number" id="carbs" value="80" step="1">
+        </div>
+        <div class="form-row">
+            <label>Protein (g):</label>
+            <input type="number" id="protein" value="20" step="1">
+        </div>
+        <div class="form-row">
+            <label>Fat (g):</label>
+            <input type="number" id="fat" value="15" step="1">
+        </div>
+        <div class="form-row">
+            <label>Fiber (g):</label>
+            <input type="number" id="fiber" value="5" step="1">
+        </div>
+        <div class="form-row">
+            <label>Sugar (g):</label>
+            <input type="number" id="sugar" value="30" step="1">
+        </div>
+        <div class="form-row">
+            <label>Sodium (mg):</label>
+            <input type="number" id="sodium" value="500" step="1">
+        </div>
+        <div class="form-row">
+            <label>Heart Rate (bpm):</label>
+            <input type="number" id="heart_rate" value="75" step="1">
+        </div>
+        <div class="form-row">
+            <label>Activity Level (0-1):</label>
+            <input type="number" id="activity" value="0.4" step="0.1">
+        </div>
+        <div class="form-row">
+            <label>Baseline Glucose (mg/dL):</label>
+            <input type="number" id="baseline" value="110" step="1">
+        </div>
+        <div class="form-row">
+            <label>Stress Level (0-1):</label>
+            <input type="number" id="stress" value="0.4" step="0.1">
+        </div>
+        <div class="form-row">
+            <label>Sleep Quality (0-1):</label>
+            <input type="number" id="sleep" value="0.7" step="0.1">
+        </div>
+        <div class="form-row">
+            <label>Hydration (0-1):</label>
+            <input type="number" id="hydration" value="0.7" step="0.1">
+        </div>
+        <div class="form-row">
+            <label>Time Since Meal (hrs):</label>
+            <input type="number" id="time_meal" value="4" step="0.5">
+        </div>
+        <div class="form-row">
+            <label>Meal Interval (hrs):</label>
+            <input type="number" id="interval" value="6" step="0.5">
+        </div>
+        <div class="form-row">
+            <label>Medication Taken:</label>
+            <select id="medication">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+            </select>
+        </div>
+        
+        <button onclick="testGlucosePrediction()">🧬 Predict Glucose (with Medical Validation)</button>
+        <div id="glucose-result" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 4: Frontend Access -->
+    <div class="test-section">
+        <h2>4️⃣ Frontend Access Instructions</h2>
+        <p><strong>⚠️ IMPORTANT:</strong> Explainability buttons are in the code but may be cached.</p>
+        <ol>
+            <li>Open: <a href="http://localhost:5173/food-recognition" target="_blank"><strong>http://localhost:5173/food-recognition</strong></a></li>
+            <li><strong>Hard Refresh:</strong> Press <code>Ctrl + Shift + R</code> (Windows) or <code>Cmd + Shift + R</code> (Mac)</li>
+            <li>Or open in <strong>Incognito/Private mode</strong></li>
+            <li>Upload a food image (Dosa, Idli, etc.)</li>
+            <li>Scroll down to see <strong>🔍 Explain This Prediction</strong> section</li>
+            <li>You should see 3 buttons: LIME, SHAP, Both</li>
+        </ol>
+        <button onclick="window.open('http://localhost:5173/food-recognition', '_blank')">Open Food Recognition Page</button>
+        <button onclick="window.open('http://localhost:5173/glucose-prediction', '_blank')">Open Glucose Prediction Page</button>
+    </div>
+
+    <script>
+        async function testCVHealth() {
+            const resultDiv = document.getElementById('cv-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Testing CV service...';
+            
+            try {
+                const response = await fetch('http://localhost:5002/health');
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = '✅ CV Service is HEALTHY\n\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '❌ CV Service is NOT responding\n\nError: ' + error.message;
+            }
+        }
+
+        async function testLSTMHealth() {
+            const resultDiv = document.getElementById('lstm-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Testing LSTM service...';
+            
+            try {
+                const response = await fetch('http://localhost:5001/health');
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = '✅ LSTM Service is HEALTHY\n\n' + JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '❌ LSTM Service is NOT responding\n\nError: ' + error.message;
+            }
+        }
+
+        async function testGlucosePrediction() {
+            const resultDiv = document.getElementById('glucose-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ Predicting glucose with medical validation...';
+            
+            const data = {
+                meal_features: {
+                    carbohydrates: parseFloat(document.getElementById('carbs').value),
+                    protein: parseFloat(document.getElementById('protein').value),
+                    fat: parseFloat(document.getElementById('fat').value),
+                    fiber: parseFloat(document.getElementById('fiber').value),
+                    sugar: parseFloat(document.getElementById('sugar').value),
+                    sodium: parseFloat(document.getElementById('sodium').value),
+                    heart_rate: parseFloat(document.getElementById('heart_rate').value),
+                    activity_level: parseFloat(document.getElementById('activity').value),
+                    baseline_glucose: parseFloat(document.getElementById('baseline').value),
+                    stress_level: parseFloat(document.getElementById('stress').value),
+                    sleep_quality: parseFloat(document.getElementById('sleep').value),
+                    hydration_level: parseFloat(document.getElementById('hydration').value),
+                    time_since_last_meal: parseFloat(document.getElementById('time_meal').value),
+                    meal_interval: parseFloat(document.getElementById('interval').value),
+                    medication_taken: parseInt(document.getElementById('medication').value)
+                }
+            };
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/glucose-prediction/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(JSON.stringify(error, null, 2));
+                }
+                
+                const result = await response.json();
+                resultDiv.className = 'result success';
+                
+                let output = '✅ PREDICTION SUCCESSFUL\n\n';
+                output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+                output += `📊 GLUCOSE PREDICTION: ${result.prediction.display}\n`;
+                output += `   Baseline → Predicted: ${result.prediction.baseline} → ${result.prediction.value} mg/dL\n`;
+                output += `   Delta: ${result.prediction.delta > 0 ? '+' : ''}${result.prediction.delta} mg/dL\n\n`;
+                
+                output += `🎯 RISK LEVEL: ${result.risk_classification.level}\n`;
+                output += `   Color: ${result.risk_classification.color}\n`;
+                output += `   ${result.risk_classification.interpretation}\n\n`;
+                
+                output += `💡 RECOMMENDATION:\n   ${result.risk_classification.recommendation}\n\n`;
+                
+                output += `🔍 CONFIDENCE: ${result.confidence.level} (${Math.round(result.confidence.score * 100)}%)\n`;
+                output += `   ${result.confidence.message}\n\n`;
+                
+                output += `📐 DERIVED FEATURES:\n`;
+                output += `   Net Carbs: ${result.derived_features.net_carbs}g\n`;
+                output += `   Sugar Ratio: ${(result.derived_features.sugar_ratio * 100).toFixed(0)}%\n`;
+                output += `   Activity-Adjusted Load: ${result.derived_features.activity_adjusted_load}g\n\n`;
+                
+                if (result.medical_safety.warning) {
+                    output += `⚠️ WARNING: ${result.medical_safety.warning}\n\n`;
+                }
+                
+                output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+                output += 'Full JSON Response:\n' + JSON.stringify(result, null, 2);
+                
+                resultDiv.innerHTML = output;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '❌ PREDICTION FAILED\n\nError: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

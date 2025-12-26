@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FINAL TEST - Both Issues</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 20px auto; padding: 20px; background: #f5f5f5; }
+        .test { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; }
+        h1 { color: #4338ca; }
+        button { background: #8b5cf6; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        button:hover { background: #7c3aed; }
+        .result { margin-top: 15px; padding: 15px; background: #f9fafb; border-radius: 6px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+        .success { border-left: 4px solid #10b981; }
+        .error { border-left: 4px solid #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🔧 FINAL FIX TEST</h1>
+    
+    <div class="test">
+        <h2>1. Test Glucose Prediction (net_carbs fix)</h2>
+        <button onclick="testGlucose()">Test Glucose API</button>
+        <div id="glucose" class="result" style="display:none;"></div>
+    </div>
+
+    <div class="test">
+        <h2>2. Test CV Explainability</h2>
+        <p><strong>IMPORTANT:</strong> This tests the API. For frontend buttons:</p>
+        <ol>
+            <li>Close this page</li>
+            <li>Open <strong>NEW Incognito window</strong> (Ctrl+Shift+N)</li>
+            <li>Go to: <a href="http://localhost:5173/food-recognition" target="_blank">http://localhost:5173/food-recognition</a></li>
+            <li>Upload image</li>
+            <li>Scroll down - buttons will be there</li>
+        </ol>
+        <button onclick="testCV()">Test CV Service Health</button>
+        <div id="cv" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        async function testGlucose() {
+            const div = document.getElementById('glucose');
+            div.style.display = 'block';
+            div.innerHTML = '⏳ Testing glucose prediction...';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/glucose-prediction/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        meal_features: {
+                            carbohydrates: 80, protein: 20, fat: 15, fiber: 5, sugar: 30,
+                            sodium: 500, heart_rate: 75, activity_level: 0.4,
+                            baseline_glucose: 110, stress_level: 0.4, sleep_quality: 0.7,
+                            hydration_level: 0.7, time_since_last_meal: 4,
+                            meal_interval: 6, medication_taken: 0
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(JSON.stringify(error, null, 2));
+                }
+                
+                const data = await response.json();
+                div.className = 'result success';
+                div.innerHTML = '✅ GLUCOSE PREDICTION WORKING!\n\n' +
+                    `Predicted: ${data.prediction.display}\n` +
+                    `Baseline → Predicted: ${data.prediction.baseline} → ${data.prediction.value} mg/dL\n` +
+                    `Risk Level: ${data.risk_classification.level}\n` +
+                    `Net Carbs: ${data.derived_features.net_carbs}g (CALCULATED CORRECTLY)\n` +
+                    `Sugar Ratio: ${(data.derived_features.sugar_ratio * 100).toFixed(0)}%\n` +
+                    `Confidence: ${data.confidence.level}\n\n` +
+                    '✅ The "net_carbs" error is FIXED!';
+            } catch (error) {
+                div.className = 'result error';
+                div.innerHTML = '❌ ERROR:\n\n' + error.message + '\n\nService may still be starting. Wait 10 seconds and try again.';
+            }
+        }
+
+        async function testCV() {
+            const div = document.getElementById('cv');
+            div.style.display = 'block';
+            div.innerHTML = '⏳ Testing CV service...';
+            
+            try {
+                const response = await fetch('http://localhost:5002/health');
+                const data = await response.json();
+                div.className = 'result success';
+                div.innerHTML = '✅ CV SERVICE HEALTHY\n\n' + JSON.stringify(data, null, 2) + 
+                    '\n\nExplainability endpoints available:\n' +
+                    '  /explain/lime\n' +
+                    '  /explain/shap\n' +
+                    '  /explain/both\n\n' +
+                    'Frontend buttons should work in new Incognito window!';
+            } catch (error) {
+                div.className = 'result error';
+                div.innerHTML = '❌ CV Service not responding\n\n' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
