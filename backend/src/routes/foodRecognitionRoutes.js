@@ -76,9 +76,14 @@ router.post('/upload', authMiddleware, upload.single('image'), async (req, res) 
       recognizedFood = cvResponse.data.food_name || null;
       confidence = cvResponse.data.confidence || 0;
       recognitionMethod = 'cv_service';
-      console.log(`CV Service recognized: ${recognizedFood} (${confidence})`);
+      console.log(`✅ CV Service recognized: ${recognizedFood} (${(confidence * 100).toFixed(1)}%)`);
     } catch (cvError) {
-      console.log('CV Service not available, using enhanced image matching');
+      console.log('❌ CV Service error:', cvError.response?.data || cvError.message || cvError);
+      if (cvError.response) {
+        console.log('   Response status:', cvError.response.status);
+        console.log('   Response data:', cvError.response.data);
+      }
+      console.log('⚠️  Using fallback image matching');
       
       // Strategy 2: Enhanced image matching using our utility
       try {
@@ -503,7 +508,11 @@ router.post('/recognize', authMiddleware, async (req, res) => {
       
       console.log(`✅ CV Service recognized: ${recognizedFood} (${(confidence * 100).toFixed(1)}%)`);
     } catch (cvError) {
-      console.log('❌ CV Service error:', cvError.message);
+      console.log('❌ CV Service error:', cvError.response?.data || cvError.message || cvError);
+      if (cvError.response) {
+        console.log('   Response status:', cvError.response.status);
+        console.log('   Response data:', cvError.response.data);
+      }
       console.log('⚠️  Using fallback image matching');
       
       // Fallback to image matcher

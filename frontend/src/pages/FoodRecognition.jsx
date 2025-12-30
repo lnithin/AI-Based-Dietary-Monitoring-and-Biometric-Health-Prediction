@@ -10,6 +10,7 @@ const FoodRecognition = () => {
   const [explainLoading, setExplainLoading] = useState(false);
   const [explanation, setExplanation] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [selectedExplainer, setSelectedExplainer] = useState('both'); // 'lime', 'shap', or 'both'
   const fileInputRef = useRef(null);
 
   const handleImageUpload = (e) => {
@@ -69,7 +70,6 @@ const FoodRecognition = () => {
 
     setExplainLoading(true);
     setError(null);
-    setExplanation(null);
 
     const formData = new FormData();
     formData.append('image', image);
@@ -79,21 +79,35 @@ const FoodRecognition = () => {
         ? 'http://localhost:5002/explain/both'
         : `http://localhost:5002/explain/${method}`;
 
+      console.log(`Sending request to: ${endpoint}`);
+
       const response = await fetch(endpoint, {
         method: 'POST',
         body: formData
       });
 
-      const data = await response.json();
+      console.log('Response status:', response.status);
 
-      if (data.success) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Full response received:', data);
+
+      // Check if response indicates success
+      if (data && (data.success || data.method || (data.lime && data.shap))) {
+        console.log('Success detected, setting state...');
         setExplanation(data);
         setShowExplanation(true);
+        console.log('State set successfully');
       } else {
-        setError('Failed to generate explanation: ' + (data.error || 'Unknown error'));
+        console.error('Unexpected response format:', data);
+        setError('Failed to generate explanation: ' + (data?.error || 'Unexpected response format'));
       }
     } catch (err) {
-      setError('Explanation error: ' + err.message);
+      console.error('Error:', err.message);
+      setError('Error: ' + err.message);
     } finally {
       setExplainLoading(false);
     }
@@ -281,7 +295,29 @@ const FoodRecognition = () => {
                 <div style={styles.predictionDetails}>
                   <p><strong>Prediction:</strong> {explanation.top_prediction}</p>
                   <p><strong>Confidence:</strong> {(explanation.confidence * 100).toFixed(1)}%</p>
+                  {explanation.most_important_region && (
+                    <p><strong>Key Region:</strong> {explanation.most_important_region.replace('_', ' ')}</p>
+                  )}
                 </div>
+
+                {explanation.region_importance && (
+                  <div style={{...styles.predictionDetails, marginTop: '10px'}}>
+                    <h5 style={{margin: '0 0 10px 0', color: '#4f46e5'}}>📍 Region Importance</h5>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '13px' }}>
+                      {Object.entries(explanation.region_importance).map(([region, score]) => (
+                        <div key={region} style={{
+                          padding: '6px',
+                          background: region === explanation.most_important_region ? '#dbeafe' : '#f9fafb',
+                          borderRadius: '4px',
+                          border: region === explanation.most_important_region ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                          textAlign: 'center'
+                        }}>
+                          <strong>{region.replace(/_/g, ' ')}:</strong> {(score * 100).toFixed(1)}%
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {explanation.visualization && (
                   <div style={styles.visualizationContainer}>
@@ -316,6 +352,11 @@ const FoodRecognition = () => {
                   <div style={styles.comparisonItem}>
                     <h5>SHAP Heatmap</h5>
                     <p>{explanation.shap.explanation}</p>
+                    {explanation.shap.most_important_region && (
+                      <div style={{background: '#f0f9ff', padding: '8px', borderRadius: '4px', marginBottom: '10px', fontSize: '13px'}}>
+                        <strong>Most Important:</strong> {explanation.shap.most_important_region.replace(/_/g, ' ')}
+                      </div>
+                    )}
                     {explanation.shap.visualization && (
                       <img 
                         src={`data:image/png;base64,${explanation.shap.visualization}`} 

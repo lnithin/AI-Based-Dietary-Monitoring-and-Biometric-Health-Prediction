@@ -18,6 +18,7 @@ function MealLogger({ token, user }) {
   const [explainLoading, setExplainLoading] = useState(false);
   const [explanation, setExplanation] = useState(null);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [selectedExplainer, setSelectedExplainer] = useState('both'); // 'lime', 'shap', or 'both'
 
   const handleChange = (e) => {
     setMealData({
@@ -125,7 +126,7 @@ function MealLogger({ token, user }) {
 
     setExplainLoading(true);
     setError('');
-    setExplanation(null);
+    setSuccess('');
 
     const formData = new FormData();
     formData.append('image', selectedImage);
@@ -140,18 +141,23 @@ function MealLogger({ token, user }) {
         body: formData
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (data.success) {
+      // Check if response indicates success
+      if (data && (data.success || data.method || (data.lime && data.shap))) {
         setExplanation(data);
         setShowExplanation(true);
-        setSuccess(`✅ ${method.toUpperCase()} explanation generated successfully!`);
+        setSuccess(`✅ ${method.toUpperCase()} explanation generated!`);
       } else {
-        setError('Failed to generate explanation: ' + (data.error || 'Unknown error'));
+        setError('Failed to generate explanation: ' + (data?.error || 'Unexpected response format'));
       }
     } catch (err) {
-      console.error(`${method.toUpperCase()} Explanation Error:`, err);
-      setError(`Explanation error: ${err.message}. Check if CV service (port 5002) is running.`);
+      setError(`Error: ${err.message}`);
     } finally {
       setExplainLoading(false);
     }
@@ -690,8 +696,619 @@ function MealLogger({ token, user }) {
           </div>
         )}
 
-        {/* Explanation Results Display */}
-        {showExplanation && explanation && (
+        {/* Explanation Results Display - Comprehensive 4-Section Layout */}
+        {showExplanation && explanation ? (
+          <div style={{ 
+            gridColumn: '1 / -1',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.5rem'
+          }}>
+            
+            {/* Debug indicator - remove after testing */}
+            <div style={{
+              padding: '0.5rem',
+              background: '#10b981',
+              color: 'white',
+              borderRadius: '4px',
+              textAlign: 'center',
+              fontSize: '0.85rem'
+            }}>
+              ✅ Explanation loaded successfully! Scroll down to see results.
+            </div>
+            
+            {/* SECTION 1: Recognition Summary (No duplication) */}
+            <div className="card" style={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              boxShadow: '0 8px 24px rgba(102, 126, 234, 0.25)'
+            }}>
+              <div style={{ padding: '1.5rem' }}>
+                <h3 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: '700',
+                  marginBottom: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}>
+                  <span style={{ fontSize: '2rem' }}>🎯</span>
+                  Recognition Summary
+                </h3>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem',
+                  marginTop: '1rem'
+                }}>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.15)',
+                    backdropFilter: 'blur(10px)',
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>
+                      Predicted Food
+                    </div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: '700' }}>
+                      {explanation.lime?.top_prediction || explanation.top_prediction}
+                    </div>
+                  </div>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.15)',
+                    backdropFilter: 'blur(10px)',
+                    padding: '1rem',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>
+                      Confidence
+                    </div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: '700' }}>
+                      {((explanation.lime?.confidence || explanation.confidence) * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                  {explanation.consistency?.reliability_score && (
+                    <div style={{
+                      background: 'rgba(255,255,255,0.15)',
+                      backdropFilter: 'blur(10px)',
+                      padding: '1rem',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255,255,255,0.2)'
+                    }}>
+                      <div style={{ fontSize: '0.85rem', opacity: 0.9, marginBottom: '0.25rem' }}>
+                        Reliability Score
+                      </div>
+                      <div style={{ fontSize: '1.3rem', fontWeight: '700' }}>
+                        {explanation.consistency.reliability_score}%
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Consistency Warning */}
+                {explanation.consistency?.consistency && (
+                  <div style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    background: explanation.consistency.agreement_level === 'strong' 
+                      ? 'rgba(16, 185, 129, 0.2)' 
+                      : 'rgba(251, 191, 36, 0.2)',
+                    borderRadius: '8px',
+                    border: `2px solid ${explanation.consistency.agreement_level === 'strong' ? '#10b981' : '#fbbf24'}`,
+                    fontSize: '0.95rem',
+                    lineHeight: '1.5'
+                  }}>
+                    {explanation.consistency.consistency}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* SECTION 2: Explainability Selector */}
+            {explanation.lime && explanation.shap && (
+              <div className="card" style={{ 
+                background: 'white',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div style={{ padding: '1.5rem' }}>
+                  <div style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    justifyContent: 'center',
+                    flexWrap: 'wrap'
+                  }}>
+                    <button
+                      onClick={() => setSelectedExplainer('lime')}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        background: selectedExplainer === 'lime' 
+                          ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                          : 'white',
+                        color: selectedExplainer === 'lime' ? 'white' : '#4b5563',
+                        border: selectedExplainer === 'lime' ? 'none' : '2px solid #d1d5db',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        boxShadow: selectedExplainer === 'lime' 
+                          ? '0 4px 12px rgba(16, 185, 129, 0.3)'
+                          : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.2rem' }}>🧪</span>
+                      LIME
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        opacity: 0.8,
+                        fontWeight: '400'
+                      }}>
+                        (Local)
+                      </span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setSelectedExplainer('shap')}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        background: selectedExplainer === 'shap'
+                          ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                          : 'white',
+                        color: selectedExplainer === 'shap' ? 'white' : '#4b5563',
+                        border: selectedExplainer === 'shap' ? 'none' : '2px solid #d1d5db',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        boxShadow: selectedExplainer === 'shap'
+                          ? '0 4px 12px rgba(59, 130, 246, 0.3)'
+                          : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.2rem' }}>🔥</span>
+                      SHAP
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        opacity: 0.8,
+                        fontWeight: '400'
+                      }}>
+                        (Model)
+                      </span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setSelectedExplainer('both')}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        background: selectedExplainer === 'both'
+                          ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+                          : 'white',
+                        color: selectedExplainer === 'both' ? 'white' : '#4b5563',
+                        border: selectedExplainer === 'both' ? 'none' : '2px solid #d1d5db',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        boxShadow: selectedExplainer === 'both'
+                          ? '0 4px 12px rgba(139, 92, 246, 0.3)'
+                          : 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span style={{ fontSize: '1.2rem' }}>🎯</span>
+                      BOTH
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        opacity: 0.8,
+                        fontWeight: '400'
+                      }}>
+                        (Side-by-Side)
+                      </span>
+                    </button>
+                  </div>
+                  
+                  {/* Method Descriptions */}
+                  <div style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    background: '#f9fafb',
+                    borderRadius: '8px',
+                    fontSize: '0.9rem',
+                    lineHeight: '1.6',
+                    color: '#374151'
+                  }}>
+                    {selectedExplainer === 'lime' && (
+                      <div>
+                        <strong style={{ color: '#10b981' }}>LIME (Local Interpretable Model-agnostic Explanations):</strong>
+                        <br />
+                        {explanation.lime?.scope || 'Explains this specific image by identifying which visual regions most influenced the prediction.'}
+                      </div>
+                    )}
+                    {selectedExplainer === 'shap' && (
+                      <div>
+                        <strong style={{ color: '#3b82f6' }}>SHAP (SHapley Additive exPlanations):</strong>
+                        <br />
+                        {explanation.shap?.scope || 'Shows what the neural network learned by highlighting activation patterns across the entire image.'}
+                      </div>
+                    )}
+                    {selectedExplainer === 'both' && (
+                      <div>
+                        <strong style={{ color: '#8b5cf6' }}>Side-by-Side Comparison:</strong>
+                        <br />
+                        Compare local image features (LIME) with learned model behavior (SHAP) to understand both what's in this image and what the model recognizes.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 3: Visual Explanation Panel */}
+            {((explanation.lime && explanation.shap && selectedExplainer === 'both') || 
+              (explanation.lime && selectedExplainer === 'lime') || 
+              (explanation.shap && selectedExplainer === 'shap') ||
+              explanation.visualization) && (
+              <div className="card" style={{
+                background: 'white',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div className="card-header" style={{ 
+                  background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+                  color: '#1f2937',
+                  fontWeight: '700',
+                  fontSize: '1.1rem',
+                  borderBottom: '2px solid #d1d5db'
+                }}>
+                  <span style={{ fontSize: '1.3rem', marginRight: '0.5rem' }}>🔍</span>
+                  Visual Explanation
+                </div>
+                
+                <div style={{ padding: '1.5rem' }}>
+                  {/* Side-by-Side View */}
+                  {selectedExplainer === 'both' && explanation.lime && explanation.shap && (
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+                      gap: '1.5rem'
+                    }}>
+                      {/* LIME Panel */}
+                      <div style={{
+                        background: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+                        padding: '1.25rem',
+                        borderRadius: '12px',
+                        border: '2px solid #10b981'
+                      }}>
+                        <h4 style={{
+                          color: '#065f46',
+                          fontSize: '1.1rem',
+                          fontWeight: '700',
+                          marginBottom: '1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          <span style={{ fontSize: '1.3rem' }}>🧪</span>
+                          LIME Analysis
+                        </h4>
+                        {explanation.lime.visualization && (
+                          <img
+                            src={`data:image/png;base64,${explanation.lime.visualization}`}
+                            alt="LIME Explanation"
+                            style={{ width: '100%', borderRadius: '8px', marginBottom: '1rem' }}
+                          />
+                        )}
+                      </div>
+                      
+                      {/* SHAP Panel */}
+                      <div style={{
+                        background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                        padding: '1.25rem',
+                        borderRadius: '12px',
+                        border: '2px solid #3b82f6'
+                      }}>
+                        <h4 style={{
+                          color: '#1e40af',
+                          fontSize: '1.1rem',
+                          fontWeight: '700',
+                          marginBottom: '1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem'
+                        }}>
+                          <span style={{ fontSize: '1.3rem' }}>🔥</span>
+                          SHAP Heatmap
+                        </h4>
+                        {explanation.shap.visualization && (
+                          <img
+                            src={`data:image/png;base64,${explanation.shap.visualization}`}
+                            alt="SHAP Explanation"
+                            style={{ width: '100%', borderRadius: '8px', marginBottom: '1rem' }}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Single View */}
+                  {selectedExplainer === 'lime' && explanation.lime?.visualization && (
+                    <div style={{ textAlign: 'center' }}>
+                      <img
+                        src={`data:image/png;base64,${explanation.lime.visualization}`}
+                        alt="LIME Explanation"
+                        style={{ 
+                          maxWidth: '100%', 
+                          borderRadius: '12px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  {selectedExplainer === 'shap' && explanation.shap?.visualization && (
+                    <div style={{ textAlign: 'center' }}>
+                      <img
+                        src={`data:image/png;base64,${explanation.shap.visualization}`}
+                        alt="SHAP Explanation"
+                        style={{ 
+                          maxWidth: '100%', 
+                          borderRadius: '12px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                        }}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Single method fallback */}
+                  {explanation.visualization && !explanation.lime && !explanation.shap && (
+                    <div style={{ textAlign: 'center' }}>
+                      <img
+                        src={`data:image/png;base64,${explanation.visualization}`}
+                        alt="Explanation Visualization"
+                        style={{ 
+                          maxWidth: '100%', 
+                          borderRadius: '12px',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* SECTION 4: Textual Interpretation Panel */}
+            <div className="card" style={{
+              background: 'white',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div className="card-header" style={{ 
+                background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                color: '#78350f',
+                fontWeight: '700',
+                fontSize: '1.1rem',
+                borderBottom: '2px solid #fbbf24'
+              }}>
+                <span style={{ fontSize: '1.3rem', marginRight: '0.5rem' }}>📝</span>
+                Textual Interpretation
+              </div>
+              
+              <div style={{ padding: '1.5rem' }}>
+                {/* LIME Interpretation */}
+                {(selectedExplainer === 'lime' || selectedExplainer === 'both') && explanation.lime?.explanation && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                    padding: '1.25rem',
+                    borderRadius: '12px',
+                    marginBottom: '1rem',
+                    border: '2px solid #10b981'
+                  }}>
+                    <h5 style={{
+                      color: '#065f46',
+                      fontSize: '1rem',
+                      fontWeight: '700',
+                      marginBottom: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      <span style={{ fontSize: '1.2rem' }}>🧪</span>
+                      LIME Interpretation
+                    </h5>
+                    <p style={{
+                      color: '#064e3b',
+                      lineHeight: '1.8',
+                      fontSize: '1rem',
+                      margin: 0
+                    }}>
+                      {explanation.lime.explanation}
+                    </p>
+                  </div>
+                )}
+                
+                {/* SHAP Interpretation */}
+                {(selectedExplainer === 'shap' || selectedExplainer === 'both') && explanation.shap?.explanation && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                    padding: '1.25rem',
+                    borderRadius: '12px',
+                    marginBottom: '1rem',
+                    border: '2px solid #3b82f6'
+                  }}>
+                    <h5 style={{
+                      color: '#1e40af',
+                      fontSize: '1rem',
+                      fontWeight: '700',
+                      marginBottom: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      <span style={{ fontSize: '1.2rem' }}>🔥</span>
+                      SHAP Interpretation
+                    </h5>
+                    <p style={{
+                      color: '#1e3a8a',
+                      lineHeight: '1.8',
+                      fontSize: '1rem',
+                      margin: 0
+                    }}>
+                      {explanation.shap.explanation}
+                    </p>
+                    
+                    {/* Region Importance Grid */}
+                    {explanation.shap.region_importance && (
+                      <div style={{ marginTop: '1rem' }}>
+                        <h6 style={{
+                          color: '#1e40af',
+                          fontSize: '0.9rem',
+                          fontWeight: '600',
+                          marginBottom: '0.75rem'
+                        }}>
+                          📍 Region Importance Analysis:
+                        </h6>
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '0.5rem',
+                          fontSize: '0.85rem'
+                        }}>
+                          {Object.entries(explanation.shap.region_importance)
+                            .sort(([, a], [, b]) => b - a)
+                            .map(([region, score], idx) => (
+                              <div
+                                key={region}
+                                style={{
+                                  background: idx === 0 
+                                    ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+                                    : 'white',
+                                  color: idx === 0 ? 'white' : '#374151',
+                                  padding: '0.75rem',
+                                  borderRadius: '8px',
+                                  border: idx === 0 ? 'none' : '1px solid #d1d5db',
+                                  textAlign: 'center',
+                                  fontWeight: idx === 0 ? '700' : '500'
+                                }}
+                              >
+                                <div style={{ fontSize: '0.75rem', opacity: 0.8, marginBottom: '0.25rem' }}>
+                                  {region.replace(/_/g, ' ').toUpperCase()}
+                                </div>
+                                <div style={{ fontSize: '1.1rem' }}>
+                                  {(score * 100).toFixed(1)}%
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Single method explanation */}
+                {explanation.explanation && !explanation.lime && !explanation.shap && (
+                  <div style={{
+                    background: '#f9fafb',
+                    padding: '1.25rem',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    <p style={{
+                      color: '#1f2937',
+                      lineHeight: '1.8',
+                      fontSize: '1rem',
+                      margin: 0
+                    }}>
+                      {explanation.explanation}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Model Metadata */}
+                {explanation.model_metadata && (
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                    padding: '1.25rem',
+                    borderRadius: '12px',
+                    marginTop: '1rem',
+                    border: '2px solid #f59e0b'
+                  }}>
+                    <h5 style={{
+                      color: '#78350f',
+                      fontSize: '1rem',
+                      fontWeight: '700',
+                      marginBottom: '0.75rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
+                      Model Information
+                    </h5>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                      gap: '0.75rem',
+                      color: '#92400e',
+                      fontSize: '0.9rem'
+                    }}>
+                      <div>
+                        <strong>Model:</strong> {explanation.model_metadata.model_type}
+                      </div>
+                      <div>
+                        <strong>Dataset:</strong> {explanation.model_metadata.training_dataset}
+                      </div>
+                      <div>
+                        <strong>Classes:</strong> {explanation.model_metadata.num_classes}
+                      </div>
+                    </div>
+                    {explanation.model_metadata.note && (
+                      <p style={{
+                        marginTop: '0.75rem',
+                        fontSize: '0.85rem',
+                        color: '#92400e',
+                        lineHeight: '1.6',
+                        fontStyle: 'italic'
+                      }}>
+                        {explanation.model_metadata.note}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        ) : showExplanation ? (
+          <div style={{ 
+            gridColumn: '1 / -1',
+            padding: '2rem',
+            background: '#fff3cd',
+            border: '2px solid #ffc107',
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}>
+            <h3>⚠️ Waiting for explanation data...</h3>
+            <p>showExplanation is true but no explanation data received</p>
+          </div>
+        ) : null}
+
+        {/* Single-method display when only one method returned */}
+        {showExplanation && explanation && !explanation.lime && !explanation.shap && (
           <div className="card" style={{ 
             gridColumn: '1 / -1',
             background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
@@ -702,90 +1319,99 @@ function MealLogger({ token, user }) {
               <span className="card-title">🧠 AI Explainability Results</span>
             </div>
 
-            {/* Combined response from CV service: { lime: {...}, shap: {...}, summary: {...} } */}
-            {explanation.lime && explanation.shap && (
-              <div style={{ padding: '1.5rem' }}>
-                <h4 style={{ 
-                  color: '#6366f1', 
-                  marginBottom: '0.75rem',
-                  fontSize: '1.1rem'
-                }}>
-                  Method: LIME + SHAP
-                </h4>
+            {/* Combined response fallback display */}
+            <div style={{ padding: '1.5rem' }}>
+              <h4 style={{ 
+                color: '#6366f1', 
+                marginBottom: '0.75rem',
+                fontSize: '1.1rem'
+              }}>
+                Method: LIME + SHAP
+              </h4>
 
-                {explanation.summary?.interpretation && (
-                  <p style={{ 
-                    color: '#4b5563', 
-                    lineHeight: '1.6',
-                    marginBottom: '1rem',
-                    fontSize: '0.95rem'
+              {explanation.summary?.interpretation && (
+                <p style={{ 
+                  color: '#4b5563', 
+                  lineHeight: '1.6',
+                  marginBottom: '1rem',
+                  fontSize: '0.95rem'
+                }}>
+                  {explanation.summary.interpretation}
+                </p>
+              )}
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '1.5rem',
+                marginTop: '1rem'
+              }}>
+                <div style={{
+                  background: 'white',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                  <h4 style={{ 
+                    color: '#10b981', 
+                    marginBottom: '0.75rem',
+                    textAlign: 'center'
                   }}>
-                    {explanation.summary.interpretation}
-                  </p>
-                )}
+                    🔬 LIME Analysis
+                  </h4>
+                  {explanation.lime.explanation && (
+                    <p style={{ color: '#4b5563', lineHeight: '1.5', marginBottom: '0.75rem' }}>
+                      {explanation.lime.explanation}
+                    </p>
+                  )}
+                  {explanation.lime.visualization && (
+                    <img
+                      src={`data:image/png;base64,${explanation.lime.visualization}`}
+                      alt="LIME Explanation"
+                      style={{ width: '100%', borderRadius: '6px' }}
+                    />
+                  )}
+                </div>
 
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                  gap: '1.5rem',
-                  marginTop: '1rem'
+                  background: 'white',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}>
-                  <div style={{
-                    background: 'white',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  <h4 style={{ 
+                    color: '#3b82f6', 
+                    marginBottom: '0.75rem',
+                    textAlign: 'center'
                   }}>
-                    <h4 style={{ 
-                      color: '#10b981', 
+                    📊 SHAP Heatmap
+                  </h4>
+                  {explanation.shap.explanation && (
+                    <p style={{ color: '#4b5563', lineHeight: '1.5', marginBottom: '0.75rem' }}>
+                      {explanation.shap.explanation}
+                    </p>
+                  )}
+                  {explanation.shap.region_importance && (
+                    <div style={{
+                      background: '#f0f9ff',
+                      padding: '0.75rem',
+                      borderRadius: '6px',
                       marginBottom: '0.75rem',
-                      textAlign: 'center'
+                      fontSize: '0.85rem'
                     }}>
-                      🔬 LIME Analysis
-                    </h4>
-                    {explanation.lime.explanation && (
-                      <p style={{ color: '#4b5563', lineHeight: '1.5', marginBottom: '0.75rem' }}>
-                        {explanation.lime.explanation}
-                      </p>
-                    )}
-                    {explanation.lime.visualization && (
-                      <img
-                        src={`data:image/png;base64,${explanation.lime.visualization}`}
-                        alt="LIME Explanation"
-                        style={{ width: '100%', borderRadius: '6px' }}
-                      />
-                    )}
-                  </div>
-
-                  <div style={{
-                    background: 'white',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                  }}>
-                    <h4 style={{ 
-                      color: '#3b82f6', 
-                      marginBottom: '0.75rem',
-                      textAlign: 'center'
-                    }}>
-                      📊 SHAP Heatmap
-                    </h4>
-                    {explanation.shap.explanation && (
-                      <p style={{ color: '#4b5563', lineHeight: '1.5', marginBottom: '0.75rem' }}>
-                        {explanation.shap.explanation}
-                      </p>
-                    )}
-                    {explanation.shap.visualization && (
-                      <img
-                        src={`data:image/png;base64,${explanation.shap.visualization}`}
-                        alt="SHAP Explanation"
-                        style={{ width: '100%', borderRadius: '6px' }}
-                      />
-                    )}
-                  </div>
+                      <strong style={{ color: '#0369a1' }}>Most Important:</strong> {explanation.shap.most_important_region?.replace(/_/g, ' ') || 'N/A'}
+                    </div>
+                  )}
+                  {explanation.shap.visualization && (
+                    <img
+                      src={`data:image/png;base64,${explanation.shap.visualization}`}
+                      alt="SHAP Explanation"
+                      style={{ width: '100%', borderRadius: '6px' }}
+                    />
+                  )}
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Single-method response from CV service: { method, visualization, ... } */}
             {explanation.method && (
@@ -818,7 +1444,41 @@ function MealLogger({ token, user }) {
                   <p style={{ margin: '0.25rem 0' }}>
                     <strong>Confidence:</strong> {(explanation.confidence * 100).toFixed(1)}%
                   </p>
+                  {explanation.most_important_region && (
+                    <p style={{ margin: '0.25rem 0' }}>
+                      <strong>Key Region:</strong> {explanation.most_important_region.replace('_', ' ')}
+                    </p>
+                  )}
                 </div>
+
+                {/* Display region importance for SHAP */}
+                {explanation.region_importance && (
+                  <div style={{
+                    backgroundColor: '#eef2ff',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    marginBottom: '1rem'
+                  }}>
+                    <h5 style={{ color: '#4f46e5', marginBottom: '0.5rem' }}>📍 Region Importance Analysis</h5>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                      gap: '0.5rem',
+                      fontSize: '0.85rem'
+                    }}>
+                      {Object.entries(explanation.region_importance).map(([region, score]) => (
+                        <div key={region} style={{
+                          padding: '0.5rem',
+                          background: region === explanation.most_important_region ? '#dbeafe' : 'white',
+                          borderRadius: '4px',
+                          border: region === explanation.most_important_region ? '2px solid #3b82f6' : '1px solid #e5e7eb'
+                        }}>
+                          <strong>{region.replace(/_/g, ' ')}:</strong> {(score * 100).toFixed(1)}%
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {explanation.visualization && (
                   <div style={{ 

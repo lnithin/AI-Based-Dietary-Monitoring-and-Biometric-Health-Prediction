@@ -51,7 +51,17 @@ MODEL_PATH = 'models/food_recognition_model.h5'
 # Global model variable
 model = None
 explainer = None
-model = None
+
+# Model metadata for transparency
+MODEL_METADATA = {
+    'model_type': 'MobileNetV2-based CNN',
+    'training_dataset': 'Indian Foods Dataset',
+    'num_classes': 10,
+    'images_per_class': '~50-100',
+    'last_trained': '2024',
+    'input_size': '224x224x3',
+    'note': 'Explanations highlight correlations learned by the model, not causal relationships.'
+}
 
 def load_model_file():
     """Load the trained model"""
@@ -289,12 +299,13 @@ def explain_with_lime():
         image = image.resize((IMG_SIZE, IMG_SIZE))
         img_array = np.array(image) / 255.0
         
-        # Get LIME explanation
+        # Get LIME explanation with improved parameters
         logger.info("Generating LIME explanation...")
-        explanation = explainer.explain_with_lime(img_array, top_labels=3, num_samples=500)
+        explanation = explainer.explain_with_lime(img_array, top_labels=3, num_samples=3000)
         
         return jsonify({
             'success': True,
+            'model_metadata': MODEL_METADATA,
             **explanation
         })
         
@@ -337,6 +348,7 @@ def explain_with_shap():
         
         return jsonify({
             'success': True,
+            'model_metadata': MODEL_METADATA,
             **explanation
         })
         
@@ -349,7 +361,7 @@ def explain_with_shap():
 
 @app.route('/explain/both', methods=['POST'])
 def explain_with_both():
-    """Generate both LIME and SHAP explanations"""
+    """Generate both LIME and SHAP explanations with consistency check"""
     try:
         if not EXPLAINER_AVAILABLE:
             return jsonify({
@@ -375,18 +387,24 @@ def explain_with_both():
         
         # Get both explanations
         logger.info("Generating LIME and SHAP explanations...")
-        lime_result = explainer.explain_with_lime(img_array, top_labels=3, num_samples=500)
+        lime_result = explainer.explain_with_lime(img_array, top_labels=3, num_samples=3000)
         shap_result = explainer.explain_with_shap(img_array, background_samples=20)
+        
+        # Calculate consistency
+        consistency_analysis = explainer.calculate_explanation_consistency(lime_result, shap_result)
         
         return jsonify({
             'success': True,
             'lime': lime_result,
             'shap': shap_result,
+            'consistency': consistency_analysis,
+            'model_metadata': MODEL_METADATA,
             'summary': {
                 'prediction': lime_result['top_prediction'],
                 'confidence': lime_result['confidence'],
                 'methods_used': ['LIME', 'SHAP'],
-                'interpretation': f"Both explainability methods analyzed the prediction of {lime_result['top_prediction']} with {lime_result['confidence']*100:.1f}% confidence."
+                'reliability_score': consistency_analysis['reliability_score'],
+                'interpretation': f"Both explainability methods analyzed the prediction of {lime_result['top_prediction']} with {lime_result['confidence']*100:.1f}% confidence. {consistency_analysis['consistency']}"
             }
         })
         

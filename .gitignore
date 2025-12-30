@@ -3,15 +3,29 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.pyw
 venv/
 env/
 .venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
 
-# ML / TensorFlow
+# ML / TensorFlow / AI Models
 *.h5
 *.pb
 *.onnx
 *.tflite
+*.pkl
+*.joblib
+*.pt
+*.pth
+*.weights
+models/*.h5
+models/*.pb
 
 # MongoDB
 .mongo/
@@ -19,10 +33,170 @@ data/
 *.wt
 WiredTiger*
 journal/
+*.log
 
 # Node
 node_modules/
+package-lock.json
+.npm/
+.yarn/
+dist/
+build/
+
+# Environment & Config
+.env
+.env.local
+.env.*.local
+*.local
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+.vs/
+
+# Logs
+*.log
+logs/
+server.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Test files (HTML test pages in root)
+test-*.html
+TEST_*.html
+test_report.json
+test_report.html
+test_report_*.json
+
+# Redundant documentation (keep only essential docs)
+*_FIXES*.md
+*_UPGRADE*.md
+*_COMPLETE*.md
+*_IMPROVEMENTS*.md
+ISSUES_FIXED*.md
+WHATS_NEW.md
+START_HERE.md
+*_ALIGNMENT*.md
+*_SUMMARY*.md
+QUICK_START_MEDICAL.md
+QUICK_TEST_REFERENCE.md
+*_FIX_*.md
+
+# Backup scripts (optional - comment out if needed)
+backup-*.ps1
+quick-backup.ps1
+
+# Database exports and dumps
+*.dump
+*.sql
+*.bson
+dump/
+backups/
+
+# Uploaded files and user data
+uploads/
+uploads/*
+backend/uploads/**
+frontend/uploads/**
+!uploads/.gitkeep
+
+# Food images for testing (large files)
+data/*/
+!data/.gitkeep
+
+# Python virtual environments (additional)
+.Python
+*.so
+*.dylib
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# ML Training outputs
+runs/
+experiments/
+checkpoints/
+*.ckpt
+*.safetensors
+
+# Package managers
+Pipfile.lock
+poetry.lock
+yarn.lock
+
+# Frontend build outputs
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/out/
+frontend/.cache/
+
+# Backend compiled files
+backend/dist/
+backend/build/
+
+# ML service outputs
+ml-services/*/models/*.h5
+ml-services/*/models/*.pkl
+ml-services/*/runs/
+ml-services/*/checkpoints/
+
+# Test coverage reports
+coverage/
+.nyc_output/
+*.coverage
+.coverage.*
+
+# Temporary test files
+test-backend*.py
+test-explainability*.html
+example_*.json
+
+# Environment-specific configs (keep templates)
+config.local.js
+config.local.json
+.env.production
+.env.development
+
+# System files
+*.pid
+*.seed
+*.pid.lock
+
+# Certificate files (if any)
+*.pem
+*.key
+*.crt
+*.cer
+
+# Compiled CSS/SASS
+*.css.map
+*.sass.cache
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+
+# Lock files (optional - uncomment if you want to track them)
+# package-lock.json
+# yarn.lock
+# Pipfile.lock
