@@ -8,6 +8,7 @@ import Alerts from './pages/Alerts';
 import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import GlucosePrediction from './pages/GlucosePrediction';
+import BloodPressurePrediction from './pages/BloodPressurePrediction';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -110,6 +111,12 @@ function App() {
           >
             🧬 Glucose Prediction
           </button>
+          <button 
+            className={`nav-link ${currentPage === 'bp-prediction' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('bp-prediction')}
+          >
+            🩺 Blood Pressure
+          </button>
         </div>
 
         <div className="nav-user">
@@ -126,6 +133,7 @@ function App() {
         {currentPage === 'alerts' && <Alerts token={token} user={user} />}
         {currentPage === 'profile' && <Profile token={token} user={user} onUpdate={setUser} />}
         {currentPage === 'glucose-prediction' && <GlucosePrediction token={token} userBiometrics={user} />}
+        {currentPage === 'bp-prediction' && <BloodPressurePrediction />}
       </main>
     </div>
   );

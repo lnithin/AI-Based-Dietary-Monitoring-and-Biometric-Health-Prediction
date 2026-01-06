@@ -10,6 +10,9 @@ function Dashboard({ token, user }) {
   const [recentMeals, setRecentMeals] = useState([]);
   const [recentAlerts, setRecentAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAlert, setSelectedAlert] = useState(null);
+  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [loadingAlertDetails, setLoadingAlertDetails] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -97,6 +100,44 @@ function Dashboard({ token, user }) {
       case 'warning': return 'alert-warning';
       default: return 'alert-info';
     }
+  };
+
+  const getSeverityBadgeClass = (severity) => {
+    switch (severity) {
+      case 'critical': return 'badge-danger';
+      case 'warning': return 'badge-warning';
+      case 'info': return 'badge-normal';
+      default: return 'badge-normal';
+    }
+  };
+
+  const viewAlertDetails = async (alertId) => {
+    setLoadingAlertDetails(true);
+    setShowAlertModal(true);
+    try {
+      const response = await fetch(`http://localhost:8000/api/alerts/${alertId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Alert not found');
+      }
+
+      const alertData = await response.json();
+      setSelectedAlert(alertData);
+    } catch (err) {
+      console.error('Error fetching alert details:', err);
+      alert(`❌ Error: ${err.message}`);
+      setShowAlertModal(false);
+    } finally {
+      setLoadingAlertDetails(false);
+    }
+  };
+
+  const closeAlertModal = () => {
+    setShowAlertModal(false);
+    setSelectedAlert(null);
   };
 
   if (loading) {
@@ -334,15 +375,20 @@ function Dashboard({ token, user }) {
           {recentAlerts.length > 0 ? (
             <ul className="list">
               {recentAlerts.slice(0, 5).map((alert, index) => (
-                <li key={alert._id || index} className={`list-item ${getAlertSeverityClass(alert.severity)}`} 
-                    style={{ 
-                      borderLeft: '3px solid currentColor',
-                      paddingLeft: '1.25rem',
-                      borderBottom: 'none',
-                      marginBottom: '0.75rem',
-                      background: 'transparent',
-                      paddingRight: '0'
-                    }}>
+                <li 
+                  key={alert._id || index} 
+                  className={`list-item ${getAlertSeverityClass(alert.severity)}`} 
+                  style={{ 
+                    borderLeft: '3px solid currentColor',
+                    paddingLeft: '1.25rem',
+                    borderBottom: 'none',
+                    marginBottom: '0.75rem',
+                    background: 'transparent',
+                    paddingRight: '0',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => viewAlertDetails(alert._id)}
+                >
                   <div className="list-content">
                     <div className="list-title" style={{ marginBottom: '0.25rem' }}>
                       {alert.alertType ? alert.alertType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Alert'}
@@ -418,6 +464,147 @@ function Dashboard({ token, user }) {
           </div>
         </div>
       </div>
+
+      {/* Alert Details Modal */}
+      {showAlertModal && (
+        <div 
+          className="modal-overlay" 
+          onClick={closeAlertModal}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}
+        >
+          <div 
+            className="modal-content" 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '12px',
+              padding: '2rem',
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+            }}
+          >
+            {loadingAlertDetails ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <div className="spinner"></div>
+                <p>Loading alert details...</p>
+              </div>
+            ) : selectedAlert ? (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem' }}>
+                  <h2 style={{ margin: 0, fontSize: '1.5rem' }}>🔔 Alert Details</h2>
+                  <button 
+                    onClick={closeAlertModal}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '1.5rem',
+                      cursor: 'pointer',
+                      padding: '0',
+                      color: '#666'
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <span className={`biometric-badge ${getSeverityBadgeClass(selectedAlert.severity)}`}>
+                    {selectedAlert.severity.toUpperCase()}
+                  </span>
+                </div>
+
+                <div className="card" style={{ marginBottom: '1rem', backgroundColor: '#f8f9fa' }}>
+                  <h3 style={{ marginTop: 0 }}>{selectedAlert.title || selectedAlert.alertType}</h3>
+                  <p><strong>Type:</strong> {selectedAlert.alertType}</p>
+                  <p><strong>Message:</strong> {selectedAlert.message}</p>
+                  {selectedAlert.reason && (
+                    <p><strong>Reason:</strong> {selectedAlert.reason}</p>
+                  )}
+                  {selectedAlert.detailedAnalysis && (
+                    <p><strong>Analysis:</strong> {selectedAlert.detailedAnalysis}</p>
+                  )}
+                  <p><strong>Triggered By:</strong> {selectedAlert.triggeredBy}</p>
+                  <p><strong>Created:</strong> {new Date(selectedAlert.createdAt).toLocaleString()}</p>
+                  {selectedAlert.isRead && (
+                    <p><strong>Read At:</strong> {new Date(selectedAlert.readAt).toLocaleString()}</p>
+                  )}
+                </div>
+
+                {selectedAlert.additionalContext && (
+                  <div className="card" style={{ marginBottom: '1rem', backgroundColor: '#e7f3ff' }}>
+                    <h4 style={{ marginTop: 0 }}>📊 Additional Context</h4>
+                    <p><strong>Measured Value:</strong> {selectedAlert.additionalContext.measuredValue} {selectedAlert.additionalContext.unit}</p>
+                    <p><strong>Threshold:</strong> {selectedAlert.additionalContext.thresholdValue} {selectedAlert.additionalContext.unit}</p>
+                    {selectedAlert.additionalContext.riskAssessment && (
+                      <p><strong>Risk Assessment:</strong> {selectedAlert.additionalContext.riskAssessment}</p>
+                    )}
+                  </div>
+                )}
+
+                {selectedAlert.suggestedAction && (
+                  <div className="card" style={{ marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724' }}>
+                    <h4 style={{ marginTop: 0 }}>💡 Suggested Action</h4>
+                    {typeof selectedAlert.suggestedAction === 'string' ? (
+                      <p>{selectedAlert.suggestedAction}</p>
+                    ) : (
+                      <>
+                        {selectedAlert.suggestedAction.action && <p><strong>Action:</strong> {selectedAlert.suggestedAction.action}</p>}
+                        {selectedAlert.suggestedAction.parameter && <p><strong>Parameter:</strong> {selectedAlert.suggestedAction.parameter}</p>}
+                        {selectedAlert.suggestedAction.currentValue !== undefined && (
+                          <p><strong>Current Value:</strong> {selectedAlert.suggestedAction.currentValue}</p>
+                        )}
+                        {selectedAlert.suggestedAction.recommendedValue !== undefined && (
+                          <p><strong>Recommended Value:</strong> {selectedAlert.suggestedAction.recommendedValue}</p>
+                        )}
+                        {selectedAlert.suggestedAction.expectedOutcome && (
+                          <p><strong>Expected Outcome:</strong> {selectedAlert.suggestedAction.expectedOutcome}</p>
+                        )}
+                        {selectedAlert.suggestedAction.timeframe && (
+                          <p><strong>Timeframe:</strong> {selectedAlert.suggestedAction.timeframe}</p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {selectedAlert.alternativeSuggestions && selectedAlert.alternativeSuggestions.length > 0 && (
+                  <div className="card" style={{ marginBottom: '1rem', backgroundColor: '#fff3cd', color: '#856404' }}>
+                    <h4 style={{ marginTop: 0 }}>🔄 Alternative Suggestions</h4>
+                    {selectedAlert.alternativeSuggestions.map((alt, idx) => (
+                      <div key={idx} style={{ marginBottom: '0.5rem' }}>
+                        <p><strong>{alt.action}:</strong> {alt.explanation}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={closeAlertModal}
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -24,6 +24,7 @@ try:
     from flask import Flask
     from flask_cors import CORS
     from glucose_api import glucose_bp, init_glucose_model, glucose_model
+    from bp_api import bp_bp, init_bp_model
     from lstm_glucose_model import generate_synthetic_training_data
 
     logger.info("Creating Flask application...")
@@ -32,6 +33,8 @@ try:
 
     # Register the glucose prediction blueprint
     app.register_blueprint(glucose_bp, url_prefix='/api/glucose-prediction')
+    # Register blood pressure prediction blueprint
+    app.register_blueprint(bp_bp, url_prefix='/api/blood-pressure')
 
     # Health check endpoint
     @app.route('/health', methods=['GET'])
@@ -62,6 +65,8 @@ try:
     # Initialize model on startup
     logger.info("Initializing LSTM Glucose model...")
     init_glucose_model()
+    logger.info("Initializing BP model...")
+    init_bp_model()
     
     # Import the global model to check if it's trained
     import glucose_api as ga
@@ -82,6 +87,9 @@ try:
     logger.info("  GET  http://localhost:5001/api/glucose-prediction/features")
     logger.info("  POST http://localhost:5001/api/glucose-prediction/predict")
     logger.info("  POST http://localhost:5001/api/glucose-prediction/train")
+    logger.info("  GET  http://localhost:5001/api/blood-pressure/health")
+    logger.info("  GET  http://localhost:5001/api/blood-pressure/features")
+    logger.info("  POST http://localhost:5001/api/blood-pressure/predict")
     logger.info("")
     
     # Run the server
