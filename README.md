@@ -2,12 +2,25 @@
 
 A comprehensive AI system that tracks food intake, integrates real-time biometric data, predicts health impacts, and provides personalized, explainable diet recommendations.
 
-## 🆕 Latest Feature: LSTM Glucose Prediction
-- **Live Glucose Level Predictions** using LSTM neural network
-- **15 Input Parameters** (meal composition, biometrics, temporal data)
-- **Risk-Based Alerts** with clinical recommendations
-- **Integrated into Dashboard** - Click "🧬 Glucose Prediction" to use
-- See [GLUCOSE_PREDICTION_QUICKSTART.md](./GLUCOSE_PREDICTION_QUICKSTART.md) for details
+## 🆕 Latest Features
+
+### ✅ Complete 3-Biomarker Prediction System
+- **Glucose Prediction**: LSTM-based real-time glucose forecasting (15 features)
+- **Blood Pressure Prediction**: Systolic/diastolic BP prediction with AHA guidelines (12 features)
+- **Cholesterol Prediction**: LDL/HDL/Total cholesterol with WHO guidelines (14 features)
+- **Medical Constraints**: All predictions enforce physiological safety bounds
+- **SHAP Explainability**: Sum-to-delta contributions for full transparency
+- **Integrated Dashboard**: Access all predictions from navigation menu
+
+### 🔗 Multi-Modal Fusion Engine
+- **Late-Fusion Architecture**: Integrates Computer Vision, NLP, and Biometric predictions
+- **Weighted Fusion**: CV (25%) + NLP (25%) + Biometric (35%) + Explainability (15%)
+- **Reliability Score**: Quantifies prediction confidence (High/Medium/Low)
+- **Driver Analysis**: Shows contribution of each modality
+- **Explainability Consistency**: Validates SHAP contributions match predicted deltas
+- **Paper-Compliant**: "The system employs late-fusion to integrate visual, textual, and biometric modalities into a unified health prediction with quantified reliability"
+
+See [GLUCOSE_PREDICTION_QUICKSTART.md](./GLUCOSE_PREDICTION_QUICKSTART.md) for details
 
 ## Project Structure
 
@@ -88,9 +101,15 @@ PROJECT/
 - Support for multiple input formats (text, image, OCR)
 
 ### 4. **Predictive Analytics**
-- **LSTM Models**: Time-series glucose/BP/cholesterol forecasting
+- **LSTM Models**: Time-series forecasting for 3 biomarkers (glucose, blood pressure, cholesterol)
+- **Medical Constraints**: Physiological bounds and safety caps enforced on all predictions
+- **Multi-Modal Fusion**: Late-fusion engine combining CV, NLP, and biometric modalities
+- **Reliability Scoring**: Quantifies confidence in fused predictions (High/Medium/Low)
+- **XGBoost**: Meal-to-biomarker impact prediction
+- **Risk Classification**: WHO/AHA/Clinical guideline-based risk levels
 - **XGBoost**: Meal-to-biomarker impact prediction
 - **Multi-modal fusion**: Combines text, vision, and biometric features
+- **Risk Classification**: WHO/AHA/Clinical guideline-based risk levels
 
 ### 5. **Recommendation Engine**
 - **Collaborative Filtering**: Find similar users with good outcomes

@@ -25,6 +25,8 @@ try:
     from flask_cors import CORS
     from glucose_api import glucose_bp, init_glucose_model, glucose_model
     from bp_api import bp_bp, init_bp_model
+    from cholesterol_api import cholesterol_bp, init_cholesterol_model
+    from fusion_api import fusion_bp, init_fusion_engine
     from lstm_glucose_model import generate_synthetic_training_data
 
     logger.info("Creating Flask application...")
@@ -35,6 +37,10 @@ try:
     app.register_blueprint(glucose_bp, url_prefix='/api/glucose-prediction')
     # Register blood pressure prediction blueprint
     app.register_blueprint(bp_bp, url_prefix='/api/blood-pressure')
+    # Register cholesterol prediction blueprint
+    app.register_blueprint(cholesterol_bp, url_prefix='/api/cholesterol')
+    # Register multi-modal fusion blueprint
+    app.register_blueprint(fusion_bp, url_prefix='/api/fusion')
 
     # Health check endpoint
     @app.route('/health', methods=['GET'])
@@ -49,24 +55,48 @@ try:
     @app.route('/', methods=['GET'])
     def root():
         return {
-            'message': 'LSTM Glucose Prediction API',
+            'message': 'LSTM Biomarker Prediction API',
             'status': 'running',
+            'biomarkers': ['glucose', 'blood_pressure', 'cholesterol'],
             'endpoints': {
                 'health': 'GET /health',
-                'features': 'GET /api/glucose-prediction/features',
-                'predict': 'POST /api/glucose-prediction/predict',
-                'train': 'POST /api/glucose-prediction/train',
-                'evaluate': 'POST /api/glucose-prediction/evaluate'
+                'glucose': {
+                    'features': 'GET /api/glucose-prediction/features',
+                    'predict': 'POST /api/glucose-prediction/predict',
+                    'train': 'POST /api/glucose-prediction/train',
+                    'evaluate': 'POST /api/glucose-prediction/evaluate'
+                },
+                'blood_pressure': {
+                    'features': 'GET /api/blood-pressure/features',
+                    'predict': 'POST /api/blood-pressure/predict',
+                    'health': 'GET /api/blood-pressure/health'
+                },
+                'cholesterol': {
+                    'features': 'GET /api/cholesterol/features',
+                    'predict': 'POST /api/cholesterol/predict',
+                    'explain': 'POST /api/cholesterol/explain',
+                    'health': 'GET /api/cholesterol/health'
+                },
+                'fusion': {
+                    'health': 'GET /api/fusion/health',
+                    'info': 'GET /api/fusion/info',
+                    'predict': 'POST /api/fusion/predict',
+                    'validate': 'POST /api/fusion/validate'
+                }
             }
         }, 200
     
-    logger.info("Starting Glucose Prediction API Server...")
+    logger.info("Starting Biomarker Prediction API Server...")
     
-    # Initialize model on startup
+    # Initialize models on startup
     logger.info("Initializing LSTM Glucose model...")
     init_glucose_model()
     logger.info("Initializing BP model...")
     init_bp_model()
+    logger.info("Initializing Cholesterol model...")
+    init_cholesterol_model()
+    logger.info("Initializing Multi-Modal Fusion Engine...")
+    init_fusion_engine()
     
     # Import the global model to check if it's trained
     import glucose_api as ga

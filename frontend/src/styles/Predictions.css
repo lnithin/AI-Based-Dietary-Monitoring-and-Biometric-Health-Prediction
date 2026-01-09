@@ -1,0 +1,350 @@
+/* Shared prediction styles for biomarker modules */
+
+.prediction-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.prediction-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.prediction-header h1 {
+  font-size: 2.25rem;
+  margin: 0 0 0.25rem;
+  color: #0f172a;
+}
+
+.prediction-header .subtitle {
+  color: #475569;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.prediction-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.prediction-form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.form-section {
+  margin-bottom: 1.5rem;
+}
+
+.form-section h3 {
+  margin: 0 0 1rem;
+  color: #0f172a;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.35rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1.5px solid #e5e7eb;
+  font-size: 1rem;
+  background: #f8fafc;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.field-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #fecdd3;
+  color: #b91c1c;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.submit-btn {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.45);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.result-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.result-main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.cholesterol-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.cholesterol-item {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.cholesterol-item h4 {
+  margin: 0 0 0.5rem;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.unit {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.delta {
+  margin: 0.3rem 0 0;
+  font-weight: 600;
+}
+
+.risk-badge {
+  display: inline-block;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.confidence-meter {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+
+.confidence-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.derived-metrics {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.metric-label {
+  font-weight: 600;
+  color: #111827;
+}
+
+.metric-value {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.metric-value.low-risk { color: #16a34a; }
+.metric-value.moderate-risk { color: #d97706; }
+.metric-value.high-risk { color: #dc2626; }
+
+.metric-hint {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.explainability-section {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.explainability-group {
+  margin-bottom: 1rem;
+}
+
+.explainability-group h4 {
+  margin: 0 0 0.75rem;
+  color: #0f172a;
+}
+
+.contribution-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.contribution-label {
+  flex: 0 0 140px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.contribution-visual {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.contribution-fill {
+  height: 10px;
+  border-radius: 6px;
+  background: #0ea5e9;
+}
+
+.contribution-fill.increase { background: #ef4444; }
+.contribution-fill.decrease { background: #22c55e; }
+
+.contribution-value {
+  font-weight: 600;
+  color: #0f172a;
+  min-width: 48px;
+}
+
+.explainability-note {
+  margin: 0.5rem 0 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.medical-disclaimer {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 10px;
+  padding: 1rem;
+  color: #854d0e;
+}
+
+.medical-disclaimer h4 {
+  margin: 0 0 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .result-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .prediction-container {
+    padding: 1rem;
+  }
+
+  .prediction-header h1 {
+    font-size: 1.6rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

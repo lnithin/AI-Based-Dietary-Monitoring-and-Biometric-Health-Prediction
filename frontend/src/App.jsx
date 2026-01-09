@@ -9,6 +9,8 @@ import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import GlucosePrediction from './pages/GlucosePrediction';
 import BloodPressurePrediction from './pages/BloodPressurePrediction';
+import CholesterolPrediction from './pages/CholesterolPrediction';
+import MultiModalFusion from './pages/MultiModalFusion';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -117,6 +119,18 @@ function App() {
           >
             🩺 Blood Pressure
           </button>
+          <button 
+            className={`nav-link ${currentPage === 'cholesterol-prediction' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('cholesterol-prediction')}
+          >
+            💊 Cholesterol
+          </button>
+          <button 
+            className={`nav-link ${currentPage === 'fusion' ? 'active' : ''}`}
+            onClick={() => setCurrentPage('fusion')}
+          >
+            🔗 Fusion
+          </button>
         </div>
 
         <div className="nav-user">
@@ -134,6 +148,8 @@ function App() {
         {currentPage === 'profile' && <Profile token={token} user={user} onUpdate={setUser} />}
         {currentPage === 'glucose-prediction' && <GlucosePrediction token={token} userBiometrics={user} />}
         {currentPage === 'bp-prediction' && <BloodPressurePrediction />}
+        {currentPage === 'cholesterol-prediction' && <CholesterolPrediction />}
+        {currentPage === 'fusion' && <MultiModalFusion />}
       </main>
     </div>
   );
