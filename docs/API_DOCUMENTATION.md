@@ -1,8 +1,65 @@
 # REST API Documentation
 
-**Base URL**: `http://localhost:5000` (Development)
+**Backend Base URL**: `http://localhost:8000` (Node, REST)
+
+**Biomarker/Fusion Base URL**: `http://localhost:5001` (Flask LSTM + fusion)
 
 **Content-Type**: `application/json`
+
+---
+
+## Biomarker Prediction & Fusion (Flask :5001)
+
+### Glucose Prediction (`/api/glucose-prediction`)
+- Endpoints: `GET /health`, `GET /features`, `POST /predict`, `POST /explain/shap`, `POST /evaluate`
+- Request (abridged):
+```json
+{
+  "meal_features": {
+    "carbohydrates": 60,
+    "protein": 25,
+    "fat": 15,
+    "fiber": 8,
+    "sugar": 12,
+    "sodium": 500,
+    "heart_rate": 75,
+    "activity_level": 0.5,
+    "baseline_glucose": 100,
+    "time_since_last_meal": 1.0,
+    "meal_interval": 4.0,
+    "stress_level": 0.3,
+    "sleep_quality": 0.8,
+    "hydration_level": 0.7,
+    "medication_taken": 0
+  }
+}
+```
+- Response highlights: `final_glucose`, `delta_glucose`, `risk_classification`, `constraints_applied`, `explainability.feature_contributions`.
+
+### Blood Pressure Prediction (`/api/blood-pressure`)
+- Endpoints: `GET /health`, `GET /features`, `POST /predict`, `POST /explain`
+- Request: 12 features including `sodium_mg`, `stress_level`, `activity_level`, `baseline_systolic`, `baseline_diastolic`, `medication_taken`.
+- Predict response: systolic/diastolic, `baseline`, `delta`, `risk_level`, `derived_metrics`, `explainability.drivers`.
+- Explain response: uses cached prediction; returns `predicted`, `delta`, SHAP-style `systolic_contributions`/`diastolic_contributions`, and `sum_rule_validated`.
+
+### Cholesterol Prediction (`/api/cholesterol`)
+- Endpoints: `GET /health`, `GET /features`, `POST /predict`, `POST /explain`
+- Request: 14 fields including saturated/trans fat, dietary_cholesterol_mg, fiber_g, sugar_g, sodium_mg, activity/stress/sleep/hydration, age, weight_kg, baseline_ldl, baseline_hdl.
+- Predict response: `ldl`, `hdl`, `total_cholesterol`, deltas, `risk_level`, `confidence`, derived ratios, `explainability.ldl_drivers`/`hdl_drivers`.
+
+### Multi-Modal Fusion (`/api/fusion`)
+- Endpoints: `GET /health`, `GET /info`, `POST /validate`, `POST /predict`
+- Request (example):
+```json
+{
+  "biomarker": "cholesterol",
+  "cv_data": { "food_name": "Vada", "confidence": 0.95 },
+  "nlp_data": { "saturated_fat_g": 12.0, "trans_fat_g": 0.3, "dietary_cholesterol_mg": 180.0, "fiber_g": 6.0, "sugar_g": 20.0, "sodium_mg": 1500.0 },
+  "biometric_data": { "predicted_value": 195.5, "baseline": 180.0, "delta": 15.5, "risk_level": "Borderline", "confidence": 0.82 },
+  "shap_data": { "ldl_drivers": [{"factor": "Saturated Fat", "contribution": 12.5, "direction": "increase"}] }
+}
+```
+- Response highlights: `fusion_result.final_prediction`, `baseline`, `delta`, `risk_level` (trend-aware), `fusion_score`, `reliability`, `driver_summary`, modality scores with NLP completeness cap and arithmetic validation.
 
 ---
 

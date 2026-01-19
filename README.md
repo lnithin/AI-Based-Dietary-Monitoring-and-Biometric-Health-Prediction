@@ -2,25 +2,15 @@
 
 A comprehensive AI system that tracks food intake, integrates real-time biometric data, predicts health impacts, and provides personalized, explainable diet recommendations.
 
-## 🆕 Latest Features
+## 🆕 Current Snapshot (January 2026)
 
-### ✅ Complete 3-Biomarker Prediction System
-- **Glucose Prediction**: LSTM-based real-time glucose forecasting (15 features)
-- **Blood Pressure Prediction**: Systolic/diastolic BP prediction with AHA guidelines (12 features)
-- **Cholesterol Prediction**: LDL/HDL/Total cholesterol with WHO guidelines (14 features)
-- **Medical Constraints**: All predictions enforce physiological safety bounds
-- **SHAP Explainability**: Sum-to-delta contributions for full transparency
-- **Integrated Dashboard**: Access all predictions from navigation menu
+- **3 biomarker LSTM models**: Glucose (15 features), Blood Pressure (12 features), Cholesterol (14 features) with medical safety bounds
+- **BP explainability parity**: `/api/blood-pressure/explain` uses cached predictions with SHAP-style drivers and sum-to-delta validation
+- **Multi-modal fusion engine**: Late-fusion (CV 25% / NLP 25% / Biometric 35% / Explainability 15%) with reliability labeling, arithmetic validation, and medically directed driver summaries
+- **Fusion validation tests**: `test_fusion_fixes.py` covers arithmetic, trend-aware risk, fusion-score justification, directionality, and NLP completeness cap
+- **Paper vs. implementation log**: [docs/PAPER_VS_IMPLEMENTATION_COMPARISON.md](docs/PAPER_VS_IMPLEMENTATION_COMPARISON.md) tracks completion (~73%) and gaps (wearables, RL/CF, XGBoost, OCR)
 
-### 🔗 Multi-Modal Fusion Engine
-- **Late-Fusion Architecture**: Integrates Computer Vision, NLP, and Biometric predictions
-- **Weighted Fusion**: CV (25%) + NLP (25%) + Biometric (35%) + Explainability (15%)
-- **Reliability Score**: Quantifies prediction confidence (High/Medium/Low)
-- **Driver Analysis**: Shows contribution of each modality
-- **Explainability Consistency**: Validates SHAP contributions match predicted deltas
-- **Paper-Compliant**: "The system employs late-fusion to integrate visual, textual, and biometric modalities into a unified health prediction with quantified reliability"
-
-See [GLUCOSE_PREDICTION_QUICKSTART.md](./GLUCOSE_PREDICTION_QUICKSTART.md) for details
+See [QUICK_START.md](QUICK_START.md) to start services and [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) for endpoint details.
 
 ## Project Structure
 
@@ -53,24 +43,26 @@ PROJECT/
 │   └── README.md                     # Backend documentation
 │
 ├── ml-services/                      # Python ML microservices
-│   ├── nlp_service/                  # NLP for ingredient extraction
-│   │   ├── app.py                    # Flask app
-│   │   └── requirements.txt          # Python dependencies
-│   ├── cv_service/                   # Computer Vision for food detection
-│   │   ├── app.py                    # Flask app
+│   ├── prediction_service/           # Biomarker LSTM, explainability, fusion
+│   │   ├── run_api.py                # Starts Flask API on :5001
+│   │   ├── glucose_api.py            # Glucose endpoints (+SHAP)
+│   │   ├── bp_api.py                 # Blood pressure endpoints + /explain cache
+│   │   ├── cholesterol_api.py        # Cholesterol endpoints + explainability
+│   │   ├── fusion_api.py             # Multi-modal fusion endpoints
+│   │   ├── fusion_engine.py          # Late-fusion implementation
+│   │   ├── test_fusion_fixes.py      # Fusion validation tests
 │   │   └── requirements.txt
-│   ├── prediction_service/           # LSTM/XGBoost predictions
-│   │   ├── app.py                    # Glucose/BP/Cholesterol prediction
-│   │   └── requirements.txt
-│   ├── recommendation_service/       # Hybrid recommendation engine
-│   │   ├── app.py                    # Collaborative filtering + RL
-│   │   └── requirements.txt
-│   └── xai_service/                  # Explainable AI (SHAP/LIME)
-│       ├── app.py                    # Feature explanations
-│       └── requirements.txt
+│   ├── cv_service/                   # Food image classification (port 5002)
+│   │   ├── app.py
+│   │   └── train_model.py
+│   └── nlp_service/                  # Ingredient extraction
+│       └── app.py
 │
-├── frontend/                         # React/React Native mobile app
-│   └── [To be created]
+├── frontend/                         # React web app (Vite)
+│   ├── src/
+│   │   ├── pages/
+│   │   └── styles/
+│   └── package.json
 │
 ├── docs/                             # Documentation
 │   ├── API_DOCUMENTATION.md          # REST API reference
@@ -100,27 +92,21 @@ PROJECT/
 - Nutrition mapping from USDA FoodData Central
 - Support for multiple input formats (text, image, OCR)
 
-### 4. **Predictive Analytics**
-- **LSTM Models**: Time-series forecasting for 3 biomarkers (glucose, blood pressure, cholesterol)
-- **Medical Constraints**: Physiological bounds and safety caps enforced on all predictions
-- **Multi-Modal Fusion**: Late-fusion engine combining CV, NLP, and biometric modalities
-- **Reliability Scoring**: Quantifies confidence in fused predictions (High/Medium/Low)
-- **XGBoost**: Meal-to-biomarker impact prediction
-- **Risk Classification**: WHO/AHA/Clinical guideline-based risk levels
-- **XGBoost**: Meal-to-biomarker impact prediction
-- **Multi-modal fusion**: Combines text, vision, and biometric features
-- **Risk Classification**: WHO/AHA/Clinical guideline-based risk levels
+### 4. **Predictive Analytics & Fusion**
+- **LSTM models (production path)**: Glucose, blood pressure, cholesterol with clinical bounds
+- **Explainability (SHAP)**: Sum-to-delta validation and medical directionality (↑/↓)
+- **Multi-modal fusion**: CV + NLP + Biometric + Explainability with reliability labels
+- **Fusion safeguards**: Arithmetic validation, trend-aware risk labels, NLP completeness cap
+- **Planned**: XGBoost baselines and what-if comparisons
 
 ### 5. **Recommendation Engine**
-- **Collaborative Filtering**: Find similar users with good outcomes
-- **Reinforcement Learning**: Personalized meal/nutrient recommendations
-- **Ingredient Swaps**: Suggest healthier alternatives
-- **Real-time Alerts**: Critical health warnings
+- **Implemented**: Rule-based alerts and basic suggestions
+- **Planned**: Collaborative filtering, reinforcement learning, cultural preference filters
 
 ### 6. **Explainable AI (XAI)**
-- SHAP-based feature importance
-- LIME-based local explanations
-- Trust-building visualizations
+- SHAP-based feature importance across biomarkers
+- Fusion driver summaries with consistency checks
+- LIME support planned (not fully activated)
 
 ## Technology Stack
 
@@ -139,8 +125,8 @@ PROJECT/
   - spaCy (NLP)
   - SHAP/LIME (explainability)
 
-### Frontend (Coming Soon)
-- React or React Native
+### Frontend
+- React + Vite web app
 
 ## Installation & Setup
 
@@ -165,12 +151,11 @@ cp backend\.env.example backend\.env
 Edit `backend\.env` with your MongoDB credentials:
 ```
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/dietary-monitoring
-PORT=5000
+PORT=8000
 JWT_SECRET=your_secret_key_here
 NLP_SERVICE_URL=http://localhost:5001
-PREDICTION_SERVICE_URL=http://localhost:5003
-RECOMMENDATION_SERVICE_URL=http://localhost:5004
-XAI_SERVICE_URL=http://localhost:5005
+PREDICTION_SERVICE_URL=http://localhost:5001
+CV_SERVICE_URL=http://localhost:5002
 ```
 
 #### Install Dependencies & Start
@@ -182,92 +167,45 @@ npm run dev    # Development with nodemon
 npm start      # Production
 ```
 
-Server will start on `http://localhost:5000`
+Server will start on `http://localhost:8000`
 
 ### 3. ML Services Setup
+Prefer the helper script: `./start-all.ps1` (Windows) starts backend (8000), frontend (5173), biomarker service (5001), and CV service (5002).
 
-#### NLP Service (Ingredient Extraction)
-```bash
-cd ml-services\nlp_service
-python -m venv venv
-venv\Scripts\activate  # On Windows
-pip install -r requirements.txt
-python app.py          # Runs on port 5001
-```
-
-#### Prediction Service (LSTM/XGBoost)
+#### Prediction + Fusion Service (Glucose/BP/Cholesterol/Fusion)
 ```bash
 cd ml-services\prediction_service
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-python app.py          # Runs on port 5003
+python run_api.py          # Runs on port 5001
 ```
 
-#### Recommendation Service
+#### Computer Vision Service (Food Recognition)
 ```bash
-cd ml-services\recommendation_service
+cd ml-services\cv_service
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-python app.py          # Runs on port 5004
+python app.py               # Runs on port 5002
 ```
 
-#### XAI Service
-```bash
-cd ml-services\xai_service
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python app.py          # Runs on port 5005
-```
+## API Endpoints (Summary)
 
-## API Endpoints
+**Backend (Node, http://localhost:8000)**
+- Auth: register/login/verify
+- Users: profile/settings CRUD
+- Meals: `POST /api/meals/logText|logImage|logLabel`, meal CRUD
+- Biometrics: create/list/stats/latest
+- Recommendations & Alerts: CRUD endpoints
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/verify` - Verify JWT token
+**Biomarker Prediction Service (Flask, http://localhost:5001)**
+- Glucose: `GET /api/glucose-prediction/health`, `GET /features`, `POST /predict`, `POST /explain/shap`, `POST /evaluate`
+- Blood Pressure: `GET /api/blood-pressure/health`, `GET /features`, `POST /predict`, `POST /explain`
+- Cholesterol: `GET /api/cholesterol/health`, `GET /features`, `POST /predict`, `POST /explain`
+- Fusion: `GET /api/fusion/health`, `GET /info`, `POST /predict`, `POST /validate`
 
-### User Management
-- `GET /api/users/profile` - Get user profile
-- `PUT /api/users/profile` - Update profile
-- `GET /api/users/settings` - Get user settings
-- `PUT /api/users/settings` - Update settings
-
-### Meal Logging
-- `POST /api/meals/logText` - Log meal from text
-- `POST /api/meals/logImage` - Log meal from image
-- `POST /api/meals/logLabel` - Log from nutrition label
-- `GET /api/meals` - Get user meals
-- `GET /api/meals/:mealId` - Get meal details
-- `PUT /api/meals/:mealId` - Update meal
-- `DELETE /api/meals/:mealId` - Delete meal
-
-### Biometrics
-- `POST /api/biometrics` - Record biometric
-- `GET /api/biometrics` - Get readings
-- `GET /api/biometrics/stats/:type` - Get statistics
-- `GET /api/biometrics/latest/:type` - Get latest reading
-
-### Predictions
-- `GET /api/predictions` - Get all predictions
-- `POST /api/predictions/generate` - Generate new prediction
-- `PUT /api/predictions/:id/verify` - Verify prediction accuracy
-
-### Recommendations
-- `GET /api/recommendations` - Get recommendations
-- `GET /api/recommendations/today` - Today's recommendations
-- `GET /api/recommendations/suggestions` - Meal suggestions
-- `POST /api/recommendations` - Create recommendation
-- `PUT /api/recommendations/:id/accept` - Accept recommendation
-- `PUT /api/recommendations/:id/reject` - Reject recommendation
-
-### Alerts
-- `GET /api/alerts` - Get alerts
-- `GET /api/alerts/critical` - Get critical alerts
-- `PUT /api/alerts/:id/read` - Mark as read
-- `PUT /api/alerts/:id/acknowledge` - Acknowledge alert
+See [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md) for request/response schemas.
 
 ## Database Schemas
 
@@ -379,44 +317,25 @@ cd backend
 npm run dev
 ```
 
-### Terminal 2: NLP Service
-```bash
-cd ml-services\nlp_service
-python app.py
-```
+### Manual starts (if not using `start-all.ps1`)
+- Backend: `cd backend && npm start`
+- Frontend: `cd frontend && npm run dev`
+- Biomarker + Fusion API: `cd ml-services/prediction_service && python run_api.py`
+- CV service: `cd ml-services/cv_service && python app.py`
 
-### Terminal 3: Prediction Service
-```bash
-cd ml-services\prediction_service
-python app.py
-```
-
-### Terminal 4: Recommendation Service
-```bash
-cd ml-services\recommendation_service
-python app.py
-```
-
-### Terminal 5: XAI Service
-```bash
-cd ml-services\xai_service
-python app.py
-```
-
-All services should report "OK" on their `/health` endpoints:
-- Backend: `http://localhost:5000/api/health`
-- NLP: `http://localhost:5001/health`
-- Prediction: `http://localhost:5003/health`
-- Recommendation: `http://localhost:5004/health`
-- XAI: `http://localhost:5005/health`
+Health checks:
+- Backend (if enabled): `http://localhost:8000`
+- Biomarker/Fusion: `http://localhost:5001/health`
+- Fusion info: `http://localhost:5001/api/fusion/info`
+- CV service: `http://localhost:5002`
 
 ## Testing API
 
 Use Postman or curl to test endpoints:
 
 ```bash
-# Register user
-curl -X POST http://localhost:5000/api/auth/register \
+# Register user (Node backend)
+curl -X POST http://localhost:8000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -425,8 +344,8 @@ curl -X POST http://localhost:5000/api/auth/register \
     "lastName": "Doe"
   }'
 
-# Log meal
-curl -X POST http://localhost:5000/api/meals/logText \
+# Log meal (Node backend)
+curl -X POST http://localhost:8000/api/meals/logText \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -434,14 +353,14 @@ curl -X POST http://localhost:5000/api/meals/logText \
     "description": "Grilled chicken with rice and salad"
   }'
 
-# Log biometric
-curl -X POST http://localhost:5000/api/biometrics \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+# Fusion predict (Flask service)
+curl -X POST http://localhost:5001/api/fusion/predict \
   -H "Content-Type: application/json" \
   -d '{
-    "biometricType": "glucose",
-    "glucose_mg_dl": 145,
-    "timestamp": "2024-01-15T12:30:00Z"
+    "biomarker": "cholesterol",
+    "cv_data": {"food_name": "Vada", "confidence": 0.95},
+    "nlp_data": {"saturated_fat_g": 12, "trans_fat_g": 0.3, "dietary_cholesterol_mg": 180, "fiber_g": 6, "sugar_g": 20, "sodium_mg": 1500},
+    "biometric_data": {"predicted_value": 195.5, "baseline": 180.0, "delta": 15.5, "risk_level": "Borderline", "confidence": 0.82}
   }'
 ```
 
